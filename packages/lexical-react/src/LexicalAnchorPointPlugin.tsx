@@ -8,17 +8,30 @@
 
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useEffect} from 'react';
+import {LexicalEditor, TextNode} from 'lexical';
 
-function useAnchorPoint(): void {
+// export const URL_REGEX = /https?:\/\/([\w-]+\.)*\w([\w-@?^=%&:/~+#]*)?/
+// export const URL_REGEX = /(ftp|http)s?:\/\/(.+:.+@)?([\w-]+\.(?!$|\s))*\w*[\w-@?^=%&:/~()+#]*(\.\w+)(?<=\/)/
+// export const URL_REGEX = /(ftp|http|https):\/\/(.+:.+@)?(([\w-]+\.(?!$|\s))|([\w-]+)+)+\w*[\w-~+?=#%&:/]*(\.\w+)*/
+// next one works good
+// export const URL_REGEX = /(ftp|http|https):\/\/(.+:.+@)?([\w-]+\.(?!$|\s))+\w*[\w-~+?=#%&:/]*(\.\w+)*/
+
+export const URL_REGEX = /(ftp|http|https):\/\/(.+:.+@)?([\w-/]+\.(?!$|\s))+\w*(:\d+)?([?/#][\w-~+?=#%&:/]*)?/
+
+function useAnchorPoint(editor: LexicalEditor): void {
   useEffect(() => {
-    console.log('foo')
-  }, []);
+    return editor.registerNodeTransform(TextNode, (textNode: TextNode) => {
+      // extract matches from within the text node
+
+
+    })
+  }, [editor]);
 }
 
 export function AnchorPointPlugin() {
   const [editor] = useLexicalComposerContext()
 
-  useAnchorPoint()
+  useAnchorPoint(editor)
 
   return null
 }

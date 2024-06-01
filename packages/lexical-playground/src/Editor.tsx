@@ -150,7 +150,8 @@ export default function Editor(): JSX.Element {
         <HashtagPlugin />
         <KeywordsPlugin />
         <SpeechToTextPlugin />
-        <AnchorPointPlugin />
+        {/*<AnchorPointPlugin />*/}
+        <AutoLinkPlugin />
         <CommentPlugin
           providerFactory={isCollab ? createWebsocketProvider : undefined}
         />

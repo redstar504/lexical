@@ -6,7 +6,7 @@
  *
  */
 
-import {$createAutoLinkNode, $isAutoLinkNode} from '@lexical/link';
+import {$createAutoLinkNode, $isAutoLinkNode, $isLinkNode} from '@lexical/link';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {$createTextNode, $isTextNode, LexicalEditor, TextNode} from 'lexical';
 import {useEffect} from 'react';
@@ -25,7 +25,7 @@ type Anchor = {
   url: string
 }
 
-export type AnchorPoint = (text: string) => Anchor
+export type AnchorPoint = (text: string) => Anchor | null
 
 export function createAnchorPoint(
   pattern: RegExp,
@@ -73,9 +73,15 @@ function useAnchorPoint(editor: LexicalEditor, points: AnchorPoint[]): void {
         const prevText = prevSibling.getTextContent();
         const nodeText = textNode.getTextContent();
         const combinedText = prevText + nodeText;
+        let anchor;
+
+        while((anchor = findNextAnchor(combinedText, points))) {
+          // console.log(anchor)
+        }
+
         const rematch = findNextAnchor(combinedText, points);
 
-        if (!rematch) {
+        if (!rematch || prevSibling.getTextContent().includes(rematch.text)) {
           return;
         }
 
@@ -91,29 +97,31 @@ function useAnchorPoint(editor: LexicalEditor, points: AnchorPoint[]): void {
         prevLinkTextNode.setTextContent(rematch.text);
         prevSibling.setURL(rematch.url);
 
-        // reset the selection to the end of the shifted text node
+        // TODO: reset the selection to the end of the shifted text node
       }
 
-      const nodeText = textNode.getTextContent();
-      const anchor = findNextAnchor(nodeText, points);
+      if (!$isLinkNode(parent)) {
+        const nodeText = textNode.getTextContent();
+        const anchor = findNextAnchor(nodeText, points);
 
-      if (!anchor) {
-        return;
+        if (!anchor) {
+          return;
+        }
+
+        const matchOffset = anchor.index;
+        const matchLength = anchor.length;
+        let matchedNode;
+
+        if (matchOffset === 0) {
+          [matchedNode, currentNode] = currentNode.splitText(matchLength);
+        } else {
+          [, matchedNode, currentNode] = currentNode.splitText(matchOffset, matchOffset + matchLength);
+        }
+
+        const linkNode = $createAutoLinkNode(anchor.url);
+        linkNode.append($createTextNode(anchor.text));
+        matchedNode.replace(linkNode);
       }
-
-      const matchOffset = anchor.index;
-      const matchLength = anchor.length;
-      let matchedNode;
-
-      if (matchOffset === 0) {
-        [matchedNode, currentNode] = currentNode.splitText(matchLength);
-      } else {
-        [, matchedNode, currentNode] = currentNode.splitText(matchOffset, matchOffset + matchLength);
-      }
-
-      const linkNode = $createAutoLinkNode(anchor.url);
-      linkNode.append($createTextNode(anchor.text));
-      matchedNode.replace(linkNode);
     });
   }, [editor, points]);
 }

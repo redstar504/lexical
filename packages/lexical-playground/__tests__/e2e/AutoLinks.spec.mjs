@@ -15,15 +15,7 @@ import {
   selectCharacters,
   toggleBold,
 } from '../keyboardShortcuts/index.mjs';
-import {
-  assertHTML,
-  click,
-  focusEditor,
-  html,
-  initialize,
-  pasteFromClipboard,
-  test,
-} from '../utils/index.mjs';
+import {assertHTML, click, focusEditor, html, initialize, pasteFromClipboard, test} from '../utils/index.mjs';
 
 test.describe('Auto Links', () => {
   test.beforeEach(({isCollab, page}) => initialize({isCollab, page}));
@@ -52,6 +44,31 @@ test.describe('Auto Links', () => {
           <a href="https://www.example.com" dir="ltr">
             <span data-lexical-text="true">www.example.com</span>
           </a>
+        </p>
+      `,
+      undefined,
+      {ignoreClasses: true},
+    );
+  });
+
+  test('Prevent appending to URL when text content is not the URL content', async ({page, isPlainText}) => {
+    test.skip(isPlainText);
+
+    await focusEditor(page);
+    await page.keyboard.type('http://example.com');
+    await moveLeft(page, 1)
+    await page.keyboard.type(' ')
+    await moveRight(page, 1)
+    await page.keyboard.type('.  More text.')
+
+    await assertHTML(
+      page,
+      html`
+        <p dir="ltr">
+          <a dir="ltr" href="http://example.com">
+            <span data-lexical-text="true">http://example.co m</span>
+          </a>
+          <span data-lexical-text="true">. More text.</span>
         </p>
       `,
       undefined,
@@ -113,9 +130,9 @@ test.describe('Auto Links', () => {
     await assertHTML(
       page,
       htmlWithLink +
-        html`
-          <p><br /></p>
-        `,
+      html`
+        <p><br /></p>
+      `,
       undefined,
       {ignoreClasses: true},
     );
